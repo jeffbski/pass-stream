@@ -59,6 +59,38 @@ test('sum filter', function (done) {
   });
 });
 
+test('uppercase and count length', function (done) {
+  var length = 0;
+  function writeFn(data) { // we are assuming data is strings
+    /*jshint validthis:true */
+    this.write(data.toUpperCase());
+    length += data.length;
+  }
+  function endFn() {
+    /*jshint validthis:true */
+    this.emit('length', length);
+    this.end();
+  }
+  var accum = [];
+  var lengthResult = 0;
+  var rstream = new Stream();
+  rstream
+    .pipe(passStream(writeFn, endFn))
+    .on('data', function (data) { accum.push(data); })
+    .on('length', function (len) { lengthResult = len; })
+    .on('end', function (end) {
+      t.deepEqual(accum, ['ABC', 'DEF', 'GHI']);
+      t.equal(lengthResult, 9);
+      done();
+    });
+  process.nextTick(function () {
+    rstream.emit('data', 'abc');
+    rstream.emit('data', 'def');
+    rstream.emit('data', 'ghi');
+    rstream.emit('end');
+  });
+});
+
 test('count chunks', function (done) {
   var chunks = 0;
   function writeFn(data) {

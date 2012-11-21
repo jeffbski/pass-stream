@@ -7,7 +7,7 @@ var passStream = require('..'); // require('pass-stream');
 
 var t = chai.assert;
 
-suite('pass-stream');
+suite('basic');
 
 test('simple use', function (done) {
   var accum = [];
@@ -46,3 +46,27 @@ test('paused', function (done) {
     s.resume();
   });
 });
+
+test('inline transformation', function (done) {
+  function transFn(data) {
+    /*jshint validthis:true */
+    this.write(data * 10);
+  }
+
+  var accum = [];
+  var rstream = new Stream();
+  rstream
+    .pipe(passStream(transFn))
+    .on('data', function (data) { accum.push(data); })
+    .on('end', function (end) {
+      t.deepEqual(accum, [10, 20, 30]);
+      done();
+    });
+  process.nextTick(function () {
+    rstream.emit('data', 1);
+    rstream.emit('data', 2);
+    rstream.emit('data', 3);
+    rstream.emit('end');
+  });
+});
+

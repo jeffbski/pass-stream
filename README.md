@@ -12,9 +12,12 @@ npm install pass-stream
 
 ## Usage
 
+ - `passStream(writeFn, endFn)` takes an optional writeFn and endFn and returns a pauseable stream which can be piped or used like any other
+
+
 ```javascript
 var passStream = require('pass-stream');
-var ps = passStream();
+var ps = passStream(); // constructing stream without any transformations
 readStream
   .pipe(ps)
   .pipe(anotherStream)

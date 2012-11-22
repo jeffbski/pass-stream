@@ -20,5 +20,14 @@
   },
   "scripts": {
     "test": "./node_modules/mocha/bin/mocha ./test/*.mocha.js"
-  }
+  },
+  "keywords": [
+    "stream",
+    "filter",
+    "through",
+    "pipe",
+    "pause",
+    "drain",
+    "buffer"
+  ]
 }

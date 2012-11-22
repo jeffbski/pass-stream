@@ -14,8 +14,9 @@ test('simple use', function (done) {
   var rstream = new Stream();
   rstream
     .pipe(passStream())
+    .on('error', function (err) { done(err); })
     .on('data', function (data) { accum.push(data); })
-    .on('end', function (end) {
+    .on('end', function () {
       t.deepEqual(accum, [1, 2, 3]);
       done();
     });
@@ -33,7 +34,7 @@ test('paused', function (done) {
   var s = rstream
     .pipe(passStream())
     .on('data', function (data) { accum.push(data); })
-    .on('end', function (end) {
+    .on('end', function () {
       t.deepEqual(accum, [1, 2, 3]);
       done();
     });
@@ -58,7 +59,7 @@ test('inline transformation', function (done) {
   rstream
     .pipe(passStream(transFn))
     .on('data', function (data) { accum.push(data); })
-    .on('end', function (end) {
+    .on('end', function () {
       t.deepEqual(accum, [10, 20, 30]);
       done();
     });

@@ -24,6 +24,7 @@
   "keywords": [
     "stream",
     "filter",
+    "transform",
     "through",
     "pipe",
     "pause",

@@ -26,7 +26,16 @@ test('all data types make it through with transform fns', function (done) {
     .pipe(passStream(writeFn, endFn))
     .on('data', function (data) { accum.push(data); })
     .on('end', function () {
-      t.deepEqual(accum, [1, true, false, 'abc', null, undefined, [10, 20], { a: 'b'}, buff1]);
+      t.strictEqual(accum[0], 1);
+      t.strictEqual(accum[1], true);
+      t.strictEqual(accum[2], false);
+      t.strictEqual(accum[3], 'abc');
+      t.strictEqual(accum[4], null);
+      t.strictEqual(accum[5], undefined);
+      t.deepEqual(accum[6], [10, 20]);
+      t.deepEqual(accum[7], { a: 'b' });
+      t.deepEqual(accum[8], buff1);
+      t.strictEqual(accum.length, 9);
       done();
     });
   process.nextTick(function () {

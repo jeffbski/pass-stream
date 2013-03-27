@@ -13,7 +13,7 @@ test('simple use', function (done) {
   var accum = [];
   var rstream = new Stream();
   rstream
-    .pipe(passStream())
+    .pipe(passStream(null, null, { objectMode: true }))
     .on('error', function (err) { done(err); })
     .on('data', function (data) { accum.push(data); })
     .on('end', function () {
@@ -32,7 +32,7 @@ test('paused', function (done) {
   var accum = [];
   var rstream = new Stream();
   var s = rstream
-    .pipe(passStream())
+    .pipe(passStream(null, null, { objectMode: true }))
     .on('data', function (data) { accum.push(data); })
     .on('end', function () {
       t.deepEqual(accum, [1, 2, 3]);

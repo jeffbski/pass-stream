@@ -9,7 +9,7 @@
   "main": "lib/pass-stream",
   "engines": { "node": ">=0.8" },
   "dependencies": {
-    "pause-stream": "=0.0.7"
+    "readable-stream": "~1.0.2"
   },
   "devDependencies": {
     "mocha": "~1.8.2",

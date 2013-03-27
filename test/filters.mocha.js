@@ -11,20 +11,25 @@ suite('filters');
 
 test('all data types make it through with transform fns', function (done) {
   // write through filters
-  function writeFn(data) {
+  function writeFn(data, encoding, cb) {
     /*jshint validthis:true */
-    this.queueWrite(data);
+    console.log('in writeFn', data, encoding, cb);
+    this.push(data);
+    cb();
   }
-  function endFn() {  //
+  function endFn(cb) {  //
     /*jshint validthis:true */
-    this.queueEnd();
+    console.log('in endfn for all data types'); // TODO remove
+    cb();
   }
   var accum = [];
   var rstream = new Stream();
   var buff1 = new Buffer('one');
   rstream
-    .pipe(passStream(writeFn, endFn))
-    .on('data', function (data) { accum.push(data); })
+    .pipe(passStream(writeFn, endFn, { objectMode: true }))
+    .on('data', function (data) {
+    console.log('data', data);  // why is it failing to send false through?
+    accum.push(data); })
     .on('end', function () {
       t.strictEqual(accum[0], 1);
       t.strictEqual(accum[1], true);
@@ -54,16 +59,17 @@ test('all data types make it through with transform fns', function (done) {
 
 test('can pass data to end', function (done) {
   // write through filters
-  function writeFn(data) {
+  function writeFn(data, encoding, cb) {
     /*jshint validthis:true */
-    this.queueWrite(data);
+    this.push(data);
+    cb();
   }
-  function endFn() {  //
+  function endFn(cb) {  //
     /*jshint validthis:true */
-    this.queueEnd();
+    cb();
   }
   var accum = [];
-  var stream = passStream(writeFn, endFn);
+  var stream = passStream(writeFn, endFn, { objectMode: true });
   stream
     .on('data', function (data) { accum.push(data); })
     .on('end', function () {
@@ -79,15 +85,16 @@ test('can pass data to end', function (done) {
 });
 
 test('inline transformation', function (done) {
-  function transFn(data) {
+  function transFn(data, encoding, cb) {
     /*jshint validthis:true */
-    this.queueWrite(data * 10);
+    this.push(data * 10);
+    cb();
   }
 
   var accum = [];
   var rstream = new Stream();
   rstream
-    .pipe(passStream(transFn))
+    .pipe(passStream(transFn, null, { objectMode: true }))
     .on('data', function (data) { accum.push(data); })
     .on('end', function () {
       t.deepEqual(accum, [10, 20, 30]);
@@ -102,15 +109,16 @@ test('inline transformation', function (done) {
 });
 
 test('odd filter', function (done) {
-  function transFn(data) {
+  function transFn(data, encoding, cb) {
     /*jshint validthis:true */
-    if (data % 2) this.queueWrite(data);
+    if (data % 2) this.push(data);
+    cb();
   }
 
   var accum = [];
   var rstream = new Stream();
   rstream
-    .pipe(passStream(transFn))
+    .pipe(passStream(transFn, null, { objectMode: true }))
     .on('data', function (data) { accum.push(data); })
     .on('end', function () {
       t.deepEqual(accum, [1, 3]);
@@ -126,18 +134,18 @@ test('odd filter', function (done) {
 
 test('sum filter', function (done) {
   var sum = 0;
-  function writeFn(data) {
+  function writeFn(data, encoding, cb) {
     sum += data; // summing data but not passing through
   }
-  function endFn() {
+  function endFn(cb) {
     /*jshint validthis:true */
-    this.queueWrite(sum);
-    this.queueEnd();
+    this.push(sum);
+    cb();
   }
   var accum = [];
   var rstream = new Stream();
   rstream
-    .pipe(passStream(writeFn, endFn))
+    .pipe(passStream(writeFn, endFn, { objectMode: true }))
     .on('data', function (data) { accum.push(data); })
     .on('end', function () {
       t.deepEqual(accum, [6]);
@@ -153,21 +161,21 @@ test('sum filter', function (done) {
 
 test('uppercase and count length', function (done) {
   var length = 0;
-  function writeFn(data) { // we are assuming data is strings
+  function writeFn(data, encoding, cb) { // we are assuming data is strings
     /*jshint validthis:true */
-    this.queueWrite(data.toUpperCase());
+    this.push(data.toUpperCase());
     length += data.length;
   }
-  function endFn() {
+  function endFn(cb) {
     /*jshint validthis:true */
     this.emit('length', length);
-    this.queueEnd();
+    cb();
   }
   var accum = [];
   var lengthResult = 0;
   var rstream = new Stream();
   rstream
-    .pipe(passStream(writeFn, endFn))
+    .pipe(passStream(writeFn, endFn, { objectMode: true }))
     .on('data', function (data) { accum.push(data); })
     .on('length', function (len) { lengthResult = len; })
     .on('end', function () {
@@ -185,21 +193,22 @@ test('uppercase and count length', function (done) {
 
 test('count chunks', function (done) {
   var chunks = 0;
-  function writeFn(data) {
+  function writeFn(data, encoding, cb) {
     /*jshint validthis:true */
     chunks++; // counting chunks
-    this.queueWrite(data); // passing through
+    this.push(data); // passing through
+    cb();
   }
-  function endFn() {
+  function endFn(cb) {
     /*jshint validthis:true */
     this.emit('chunk-count', chunks);
-    this.queueEnd();
+    cb();
   }
   var accum = [];
   var chunkCount;
   var rstream = new Stream();
   rstream
-    .pipe(passStream(writeFn, endFn))
+    .pipe(passStream(writeFn, endFn, { objectMode: true }))
     .on('data', function (data) { accum.push(data); })
     .on('chunk-count', function (count) { chunkCount = count; })
     .on('end', function () {
@@ -216,34 +225,19 @@ test('count chunks', function (done) {
 });
 
 test('delay packets', function (done) {
-  var ended = false;
-  var pendingWrites = 0;
-  function writeFn(data) {
+  function writeFn(data, encoding, cb) {
     /*jshint validthis:true */
-    pendingWrites++;
     var self = this;
     setTimeout(function () {
-      self.queueWrite(data); // passing through
-      pendingWrites--;
-      if (ended) onEnd.call(self);
+      self.push(data); // passing through
+      cb();
     }, 10);
-  }
-  function endFn() {
-    /*jshint validthis:true */
-    ended = true;
-    onEnd.call(this);
-  }
-  function onEnd() {
-    /*jshint validthis:true */
-    if (!pendingWrites) {
-      this.queueEnd();
-    }
   }
 
   var accum = [];
   var rstream = new Stream();
   rstream
-    .pipe(passStream(writeFn, endFn))
+    .pipe(passStream(writeFn, null, { objectMode: true }))
     .on('data', function (data) { accum.push(data); })
     .on('end', function () {
       t.deepEqual(accum, [1, 2, 3]);

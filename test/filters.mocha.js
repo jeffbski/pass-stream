@@ -10,75 +10,68 @@ var t = chai.assert;
 suite('filters');
 
 test('all data types make it through with transform fns', function (done) {
+  var accum = [];
+
   // write through filters
   function writeFn(data, encoding, cb) {
     /*jshint validthis:true */
-    console.log('in writeFn', data, encoding, cb);
+    accum.push(data);
     this.push(data);
     cb();
   }
   function endFn(cb) {  //
     /*jshint validthis:true */
-    console.log('in endfn for all data types'); // TODO remove
     cb();
+    t.strictEqual(accum[0], 1);
+    t.strictEqual(accum[1], true);
+    t.strictEqual(accum[2], false);
+    t.strictEqual(accum[3], 'abc');
+    t.deepEqual(accum[4], [10, 20]);
+    t.deepEqual(accum[5], { a: 'b' });
+    t.deepEqual(accum[6], buff1);
+    t.strictEqual(accum[7], 0);
+    t.strictEqual(accum.length, 8);
+    done();
   }
-  var accum = [];
+
   var rstream = new Stream();
   var buff1 = new Buffer('one');
   rstream
-    .pipe(passStream(writeFn, endFn, { objectMode: true }))
-    .on('data', function (data) {
-    console.log('data', data);  // why is it failing to send false through?
-    accum.push(data); })
-    .on('end', function () {
-      t.strictEqual(accum[0], 1);
-      t.strictEqual(accum[1], true);
-      t.strictEqual(accum[2], false);
-      t.strictEqual(accum[3], 'abc');
-      t.strictEqual(accum[4], null);
-      t.strictEqual(accum[5], undefined);
-      t.deepEqual(accum[6], [10, 20]);
-      t.deepEqual(accum[7], { a: 'b' });
-      t.deepEqual(accum[8], buff1);
-      t.strictEqual(accum.length, 9);
-      done();
-    });
+    .pipe(passStream(writeFn, endFn, { objectMode: true }));
+
   process.nextTick(function () {
     rstream.emit('data', 1);
     rstream.emit('data', true);
     rstream.emit('data', false);
     rstream.emit('data', 'abc');
-    rstream.emit('data', null);
-    rstream.emit('data', undefined);
     rstream.emit('data', [10, 20]);
     rstream.emit('data', { a: 'b' });
     rstream.emit('data', new Buffer('one'));
+    rstream.emit('data', 0);
     rstream.emit('end');
   });
 });
 
 test('can pass data to end', function (done) {
   // write through filters
+  var accum = [];
   function writeFn(data, encoding, cb) {
     /*jshint validthis:true */
+    accum.push(data);
     this.push(data);
     cb();
   }
   function endFn(cb) {  //
     /*jshint validthis:true */
     cb();
+    t.deepEqual(accum, [1, 2, 3, 4]);
+    done();
   }
-  var accum = [];
+
   var stream = passStream(writeFn, endFn, { objectMode: true });
-  stream
-    .on('data', function (data) { accum.push(data); })
-    .on('end', function () {
-      t.deepEqual(accum, [1, null, 3, 4]);
-      done();
-    });
   process.nextTick(function () {
     stream.write(1);
-    stream.write(null);
+    stream.write(2);
     stream.write(3);
     stream.end(4);
   });
@@ -136,6 +129,7 @@ test('sum filter', function (done) {
   var sum = 0;
   function writeFn(data, encoding, cb) {
     sum += data; // summing data but not passing through
+    cb();
   }
   function endFn(cb) {
     /*jshint validthis:true */
@@ -165,6 +159,7 @@ test('uppercase and count length', function (done) {
     /*jshint validthis:true */
     this.push(data.toUpperCase());
     length += data.length;
+    cb();
   }
   function endFn(cb) {
     /*jshint validthis:true */

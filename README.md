@@ -14,7 +14,7 @@ npm install pass-stream
 
 ## Usage
 
- - `passStream(writeFn, endFn, options)` optional writeFn, endFn, and options. Returns a pauseable stream which can be piped or used like any other
+ - `passStream(writeFn, endFn, options)` optional writeFn, endFn, and options. Returns a pauseable stream which can be piped or used like any other. Options are the same as for standard streams (for instance set objectMode = true to allow arbitrary non-null objects to be used.
 
 
 ```javascript
@@ -46,9 +46,10 @@ var passStream = require('pass-stream');
     cb();
   }
   var lengthResult = 0;
+  var options = {};
   var rstream = new Stream();
   rstream
-    .pipe(passStream(writeFn, endFn))  // construct a passStream with transformFns
+    .pipe(passStream(writeFn, endFn, options))  // construct a passStream with transformFns
     .on('length', function (len) { lengthResult = len; })
     .pipe(anotherStream);
 ```
@@ -56,13 +57,12 @@ var passStream = require('pass-stream');
 
 ## Goals
 
- - Easily use new readable-streams with node 0.8 or 0.10+
- - Built-in buffering pause capability
+ - Easily use new streams2 functionality (readable-streams) with node 0.8 or 0.10+
+ - Built-in buffering pause capability (from streams2)
  - Easy to use transformation filters with the stream
- - Comply with stream specification - tested with stream-spec
  - Act as the base to build other specific pass through streams with
  - Tested
- - Allows any datatype to be used in the stream (String, Buffer, Number, Boolean, Array, Object, null, undefined)
+ - Allows any datatype (except null or undefined) to be used in the stream (String, Buffer, Number, Boolean, Array, Object)
 
 ## Why
 

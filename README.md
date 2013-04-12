@@ -2,7 +2,7 @@
 
 pass-stream is a pass-through stream which allows transform fns for easily filtering or adapting the data that flows through the stream.
 
-It is a light wrapper over the new readable-stream functionality which is available as add in for node 0.8 and is built-in for node 0.10+
+It is a light wrapper over the new (streams2) readable-stream functionality which is available as add in for node 0.8 and is built-in for node 0.10+
 
 [![Build Status](https://secure.travis-ci.org/jeffbski/pass-stream.png?branch=master)](http://travis-ci.org/jeffbski/pass-stream)
 

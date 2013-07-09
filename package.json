@@ -1,7 +1,7 @@
 {
   "name": "pass-stream",
   "description": "pass-through stream which can filter/adapt and pause data as it passes through (streams2)",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "author": "Jeff Barczewski <jeff.barczewski@gmail.com>",
   "repository": { "type": "git", "url": "http://github.com/jeffbski/pass-stream.git" },
   "bugs" : { "url": "http://github.com/jeffbski/pass-stream/issues" },
@@ -9,7 +9,7 @@
   "main": "lib/pass-stream",
   "engines": { "node": ">=0.8" },
   "dependencies": {
-    "readable-stream": "https://github.com/jeffbski/readable-stream/tarball/v1.0.2-object-transform"
+    "readable-stream": "https://github.com/jeffbski/readable-stream/tarball/v1.0.2-object-transform2"
   },
   "devDependencies": {
     "mocha": "~1.9.0",

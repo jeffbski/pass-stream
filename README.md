@@ -31,6 +31,8 @@ If you provide a writeFn, then it is up to you to call `this.push(data)` with wh
 
 If you provide an endFn, then it will be be fired after all the data has been read but before the `end` event has been fired. You may do additional `this.push(data)` and then call the cb when done. hooked up as a listener for `on('end')`. The endFn has signature `endFn(cb)`.
 
+The `cb` functions provided in writeFn and endFn can call the callback with an error if they wish to signal an error to the stream, ex: `cb(new Error('bad...'))`
+
 The `this` context of the writeFn and endFn is set to that of the stream so you have all the normal stream functions like `emit`, `pause`, and `resume`. Note: you will not want to call `write` or `end` from within these functions since they will cause a recursive loop.
 
 ```javascript
@@ -80,4 +82,3 @@ If you have input or ideas or would like to get involved, you may:
 ## License
 
  - [MIT license](http://github.com/jeffbski/pass-stream/raw/master/LICENSE)
-

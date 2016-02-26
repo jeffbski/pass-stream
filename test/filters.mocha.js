@@ -11,6 +11,7 @@ suite('filters');
 
 test('all data types make it through with transform fns', function (done) {
   var accum = [];
+  var buff1 = new Buffer('one');
 
   // write through filters
   function writeFn(data, encoding, cb) {
@@ -35,7 +36,6 @@ test('all data types make it through with transform fns', function (done) {
   }
 
   var rstream = new Stream();
-  var buff1 = new Buffer('one');
   rstream
     .pipe(passStream(writeFn, endFn, { objectMode: true }));
 
@@ -236,6 +236,52 @@ test('delay packets', function (done) {
     .on('data', function (data) { accum.push(data); })
     .on('end', function () {
       t.deepEqual(accum, [1, 2, 3]);
+      done();
+    });
+  process.nextTick(function () {
+    rstream.emit('data', 1);
+    rstream.emit('data', 2);
+    rstream.emit('data', 3);
+    rstream.emit('end');
+  });
+});
+
+test('writeFn with cb(err)', function (done) {
+  function transFn(data, encoding, cb) {
+    /*jshint validthis:true */
+    var err = new Error('foo');
+    err.foo = true;
+    cb(err);
+  }
+
+  var rstream = new Stream();
+  rstream
+    .pipe(passStream(transFn, null, { objectMode: true }))
+    .on('error', function (err) {
+      t.equal(err.foo, true, 'should have an error');
+      done();
+    });
+  process.nextTick(function () {
+    rstream.emit('data', 1);
+    rstream.emit('data', 2);
+    rstream.emit('data', 3);
+    rstream.emit('end');
+  });
+});
+
+test('endFn with cb(err)', function (done) {
+  function endFn(cb) {
+    /*jshint validthis:true */
+    var err = new Error('bar');
+    err.bar = true;
+    cb(err);
+  }
+
+  var rstream = new Stream();
+  rstream
+    .pipe(passStream(null, endFn, { objectMode: true }))
+    .on('error', function (err) {
+      t.equal(err.bar, true, 'should have an error');
       done();
     });
   process.nextTick(function () {

@@ -1,7 +1,7 @@
 {
   "name": "pass-stream",
   "description": "pass-through stream which can filter/adapt and pause data as it passes through (streams2)",
-  "version": "0.1.5",
+  "version": "1.0.0",
   "author": "Jeff Barczewski <jeff.barczewski@gmail.com>",
   "repository": {
     "type": "git",
